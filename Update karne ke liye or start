@@ -1,0 +1,28 @@
+cd "D:\Projects\Professional Video & Photo Editor"
+git add .
+git commit -m "Update - kya badla"
+git push
+
+
+
+
+
+🎉 Website LIVE hai! Deployment Complete!
+Status: Ready ✅
+
+🌐 Aapki Website ke Links:
+URL
+🌍 Website	classic-studio.vercel.app
+⚙️ Backend API	classicstudio-api.onrender.com
+🔒 Admin Panel	classic-studio.vercel.app/admin/login
+"Visit" button pe click karo — website khul jayegi! 🚀
+
+🔄 Aage update kaise karo:
+Jab bhi website update karni ho, terminal mein sirf yeh chalao:
+
+cd "D:\Projects\Professional Video & Photo Editor"
+git add .
+git commit -m "Update - kya badla"
+git push
+Push hone ke baad Vercel + Render automatically redeploy kar denge! PC band ho — website chalti rahegi! ✅
+
