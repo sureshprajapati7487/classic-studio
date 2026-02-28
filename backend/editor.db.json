@@ -1,0 +1,132 @@
+{
+  "orders": [],
+  "admins": [
+    {
+      "id": 3,
+      "name": "laxman choudhary",
+      "mobile": "9587124896",
+      "email": "lc1229501@gmail.com",
+      "username": "laxman@0209",
+      "brand_name": "laxman fun zone",
+      "password": "$2b$10$8u8dgIhQo2/atTVhnov8GO76HlGIbU7hfExsQQ/j0BJTDMz3xoJhK",
+      "created_at": "2026-02-23T22:06:01.075Z"
+    }
+  ],
+  "portfolio_items": [
+    {
+      "id": 2,
+      "title": "Insta trending Editing ",
+      "category": "reels",
+      "file_path": "/uploads/portfolio/1772229543821-947408701.mov",
+      "file_type": "video",
+      "description": "Insta trending Editing ",
+      "price": 199,
+      "sort_order": 0,
+      "is_active": true,
+      "created_at": "2026-02-27T21:59:09.778Z",
+      "updated_at": "2026-02-27T21:59:09.781Z"
+    },
+    {
+      "id": 3,
+      "title": "Pro leval cinematic editing",
+      "category": "cinematic",
+      "file_path": "/uploads/portfolio/1772230564658-934870536.mov",
+      "file_type": "video",
+      "description": "Pro leval cinematic editing",
+      "price": 299,
+      "sort_order": 0,
+      "is_active": true,
+      "created_at": "2026-02-27T22:16:08.506Z",
+      "updated_at": "2026-02-27T22:16:08.506Z"
+    },
+    {
+      "id": 4,
+      "title": "High level editing ",
+      "category": "reels",
+      "file_path": "/uploads/portfolio/1772231012055-944875350.mov",
+      "file_type": "video",
+      "description": "High level editing Cinematic reel pro level cut and editing ",
+      "price": 399,
+      "sort_order": 0,
+      "is_active": true,
+      "created_at": "2026-02-27T22:23:39.120Z",
+      "updated_at": "2026-02-27T22:23:39.120Z"
+    }
+  ],
+  "contact_messages": [
+    {
+      "id": 1,
+      "name": "Suresh ",
+      "email": "aeromenbrand@gmail.com",
+      "mobile": "8824834657",
+      "message": "Best bhai",
+      "is_read": false,
+      "created_at": "2026-02-27T23:55:47.945Z"
+    }
+  ],
+  "_sequences": {
+    "orders": 0,
+    "admins": 3,
+    "portfolio_items": 4,
+    "contact_messages": 1
+  },
+  "site_settings": {
+    "editor_name": "Classic Studio",
+    "tagline": "Laxman Bhai",
+    "whatsapp": "919587124896",
+    "instagram": "https://www.instagram.com/lucky_bhambhu?igsh=MXgyaHZmNGlhdDR0bA%3D%3D&utm_source=qr",
+    "youtube": "https://youtube.com/@laxmanfunzonen?si=LvDAI8I7Yl5-cjdY",
+    "email": "lc1229501@gmail.com",
+    "smtp_email": "",
+    "smtp_password": "",
+    "notify_email": "",
+    "razorpay_key_id": "",
+    "razorpay_key_secret": "",
+    "pricing_plans": [
+      {
+        "id": "basic",
+        "name": "Basic Edit",
+        "price": 499,
+        "duration": "24–48 hrs",
+        "popular": false,
+        "features": [
+          "Basic cuts & transitions",
+          "Background music sync",
+          "Color correction",
+          "Up to 5 min video",
+          "2 revisions"
+        ]
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced Edit",
+        "price": 999,
+        "duration": "2–3 days",
+        "popular": true,
+        "features": [
+          "Advanced cuts & effects",
+          "Motion graphics & titles",
+          "Color grading (LUT)",
+          "Sound design",
+          "Up to 15 min video",
+          "4 revisions"
+        ]
+      },
+      {
+        "id": "pro",
+        "name": "Pro / Cinematic",
+        "price": 1999,
+        "duration": "3–5 days",
+        "popular": false,
+        "features": [
+          "Full cinematic grade",
+          "Custom 2D/3D motion graphics",
+          "Advanced VFX compositing",
+          "Multi-camera edit",
+          "No time limit",
+          "Unlimited revisions"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+# Dependency directories
+node_modules/
+
+# Environment files (sensitive data)
+.env
+.env.local
+.env.production.local
+
+# Database file (don't push - will be created fresh on server)
+backend/editor.db
+backend/editor.db-shm
+backend/editor.db-wal
+
+# Build output
+frontend/dist/
+
+# Uploaded files (don't push user uploads)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cloudflare tunnel exe
+cf.exe
+CLOUDFLARED.EXE.PSDrop.unk
+
+# IDE
+.vscode/
+.idea/
