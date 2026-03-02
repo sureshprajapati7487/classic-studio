@@ -5,7 +5,10 @@ import axios from 'axios';
 export const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
-    baseURL: BACKEND_URL,
+    // baseURL includes /api so all calls like api.get('/admin/orders')
+    // work on both localhost (Vite proxy: /api/admin/orders)
+    // and Vercel (Render: https://classicstudio-api.onrender.com/api/admin/orders)
+    baseURL: `${BACKEND_URL}/api`,
     timeout: 30000,
 });
 
