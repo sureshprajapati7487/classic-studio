@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { FiUpload, FiX, FiFile, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiX, FiFile, FiCheck, FiAlertCircle, FiCamera, FiCopy, FiCheckCircle } from 'react-icons/fi';
 import { useSettings } from '../context/SettingsContext';
-import api from '../api';
+import api, { resolveMediaUrl } from '../api';
 import toast from 'react-hot-toast';
 import './OrderForm.css';
 
-// Static service types (not plan-based, no fixed price)
+// Static service types (custom quote, no fixed price)
 const STATIC_SERVICE_TYPES = [
     { label: 'Wedding Edit', price: 0 },
     { label: 'Reels / Shorts', price: 0 },
@@ -16,6 +16,163 @@ const STATIC_SERVICE_TYPES = [
     { label: 'Custom Project', price: 0 },
 ];
 
+/* ── UPI Payment Modal ────────────────────────────────── */
+function UpiModal({ amount, settings, onPaid, onClose }) {
+    const [screenshot, setScreenshot] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadInfo, setUploadInfo] = useState(null);
+    const [copied, setCopied] = useState(false);
+    const ssRef = useRef();
+
+    const upiId = settings.upi_id || '';
+    const qrUrl = settings.upi_qr_image ? resolveMediaUrl(settings.upi_qr_image) : null;
+
+    const copyUpi = () => {
+        navigator.clipboard.writeText(upiId).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+
+    const handleScreenshot = async (file) => {
+        if (!file) return;
+        setScreenshot(file);
+        setUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const { data } = await api.post('/upload', fd, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setUploadInfo({ file_path: data.file_path, file_name: data.file_name });
+            toast.success('Screenshot uploaded! ✅');
+        } catch {
+            toast.error('Upload failed. Please try again.');
+            setScreenshot(null);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="upi-overlay" onClick={onClose}>
+            <div className="upi-modal" onClick={e => e.stopPropagation()}>
+                <button className="upi-modal__close" onClick={onClose}>
+                    <FiX size={18} />
+                </button>
+
+                <div className="upi-modal__header">
+                    <span className="upi-modal__badge">🏦 UPI Payment</span>
+                    <h2 className="upi-modal__title">Scan & Pay</h2>
+                    <p className="upi-modal__amount">₹{Number(amount).toLocaleString('en-IN')}</p>
+                </div>
+
+                <div className="upi-modal__body">
+                    {/* QR Code */}
+                    <div className="upi-modal__qr-wrap">
+                        {qrUrl ? (
+                            <img src={qrUrl} alt="UPI QR Code" className="upi-modal__qr" />
+                        ) : (
+                            <div className="upi-modal__qr-placeholder">
+                                <span style={{ fontSize: '3rem' }}>📱</span>
+                                <p>QR code not set.<br />Use UPI ID below.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Steps */}
+                    <ol className="upi-modal__steps">
+                        <li>Open <strong>GPay / PhonePe / Paytm</strong> or any UPI app</li>
+                        <li>Scan the QR code above <em>or</em> copy UPI ID</li>
+                        <li>Pay <strong>₹{Number(amount).toLocaleString('en-IN')}</strong></li>
+                        <li>Upload payment screenshot below</li>
+                    </ol>
+
+                    {/* UPI ID Copy */}
+                    {upiId && (
+                        <div className="upi-modal__id-row">
+                            <span className="upi-modal__id-label">UPI ID</span>
+                            <span className="upi-modal__id">{upiId}</span>
+                            <button className="upi-modal__copy" onClick={copyUpi}>
+                                {copied ? <FiCheckCircle size={16} color="#22c55e" /> : <FiCopy size={15} />}
+                                {copied ? ' Copied!' : ' Copy'}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Screenshot Upload */}
+                    <div className="upi-modal__upload-section">
+                        <p className="upi-modal__upload-label">📸 Upload Payment Screenshot</p>
+                        <input
+                            ref={ssRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            style={{ display: 'none' }}
+                            onChange={e => handleScreenshot(e.target.files[0])}
+                        />
+
+                        {screenshot ? (
+                            <div className="upi-modal__screenshot-preview">
+                                <img
+                                    src={URL.createObjectURL(screenshot)}
+                                    alt="Payment screenshot"
+                                    className="upi-modal__screenshot-img"
+                                />
+                                <div className="upi-modal__screenshot-info">
+                                    {uploading ? (
+                                        <span className="upi-modal__uploading">
+                                            <span className="spinner" /> Uploading...
+                                        </span>
+                                    ) : uploadInfo ? (
+                                        <span className="upi-modal__uploaded">
+                                            <FiCheck size={14} /> Screenshot uploaded ✅
+                                        </span>
+                                    ) : null}
+                                    <button
+                                        type="button"
+                                        className="upi-modal__reupload"
+                                        onClick={() => { setScreenshot(null); setUploadInfo(null); }}
+                                    >
+                                        Change
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="upi-modal__upload-btn"
+                                onClick={() => ssRef.current?.click()}
+                            >
+                                <FiCamera size={20} />
+                                <span>Camera / Gallery se upload karo</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="upi-modal__footer">
+                    <button
+                        className="btn btn-primary upi-modal__submit"
+                        disabled={!uploadInfo || uploading}
+                        onClick={() => onPaid(uploadInfo)}
+                    >
+                        {uploading ? (
+                            <><span className="spinner" /> Uploading...</>
+                        ) : (
+                            <>✅ Payment Ho Gayi — Order Submit Karo</>
+                        )}
+                    </button>
+                    <p className="upi-modal__note">
+                        Screenshot aapke order ke saath admin ko jayegi. Payment verify hone par aapko contact kiya jayega.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Main Order Form ──────────────────────────────────── */
 export default function OrderForm() {
     const { settings } = useSettings();
     const WHATSAPP_NUMBER = settings.whatsapp || '919876543210';
@@ -29,7 +186,6 @@ export default function OrderForm() {
             { id: 'pro', name: 'Pro Cinematic', price: 1999 },
         ];
 
-    // Build price map: "Plan Name (₹Price)" → price number
     const PRICE_MAP = {};
     const PLAN_TYPES = pricingPlans.map(plan => {
         const label = `${plan.name} (₹${Number(plan.price).toLocaleString('en-IN')})`;
@@ -37,14 +193,12 @@ export default function OrderForm() {
         return { label, price: plan.price };
     });
 
-    // Static services default to 0 (custom quote)
     STATIC_SERVICE_TYPES.forEach(s => { PRICE_MAP[s.label] = s.price; });
 
     const PROJECT_TYPES = [
         ...PLAN_TYPES.map(p => p.label),
         ...STATIC_SERVICE_TYPES.map(s => s.label),
     ];
-
 
     const [params] = useSearchParams();
     const navigate = useNavigate();
@@ -65,9 +219,9 @@ export default function OrderForm() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [errors, setErrors] = useState({});
+    const [showUpiModal, setShowUpiModal] = useState(false);
     const fileRef = useRef();
 
-    // Set amount based on project type
     const amount = PRICE_MAP[form.project_type] || parseInt(params.get('amount') || '0');
 
     const validate = () => {
@@ -87,10 +241,7 @@ export default function OrderForm() {
     const handleFileSelect = async (selectedFile) => {
         if (!selectedFile) return;
         const MAX = 500 * 1024 * 1024;
-        if (selectedFile.size > MAX) {
-            toast.error('File size exceeds 500MB limit');
-            return;
-        }
+        if (selectedFile.size > MAX) { toast.error('File size exceeds 500MB limit'); return; }
         setFile(selectedFile);
         setUploading(true);
         setUploadProgress(0);
@@ -99,10 +250,7 @@ export default function OrderForm() {
             fd.append('file', selectedFile);
             const { data } = await api.post('/upload', fd, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                onUploadProgress: (e) => {
-                    const pct = Math.round((e.loaded * 100) / e.total);
-                    setUploadProgress(pct);
-                }
+                onUploadProgress: (e) => setUploadProgress(Math.round((e.loaded * 100) / e.total)),
             });
             setUploadInfo({ file_path: data.file_path, file_name: data.file_name });
             setUploadProgress(100);
@@ -129,68 +277,21 @@ export default function OrderForm() {
             toast.error('Please fix the errors above');
             return;
         }
-
-        // If payment amount > 0, try Razorpay
+        // If paid — open UPI modal, else save directly
         if (amount > 0) {
-            await handleRazorpay();
+            setShowUpiModal(true);
         } else {
-            // Custom project — just save order directly
             await saveOrder({});
         }
     };
 
-    const handleRazorpay = async () => {
-        try {
-            // Check if Razorpay is configured
-            const configRes = await api.get('/payment/config');
-            if (!configRes.data.configured) {
-                // Razorpay not configured — save order as unpaid and notify
-                toast('Payment gateway not set up yet. Order saved — we will contact you for payment.', { icon: 'ℹ️' });
-                await saveOrder({});
-                return;
-            }
-            // Create Razorpay order
-            const { data } = await api.post('/payment/create-order', {
-                amount,
-                receipt: `order_${Date.now()}`
-            });
-            const rzp = new window.Razorpay({
-                key: configRes.data.key_id,
-                amount: data.order.amount,
-                currency: 'INR',
-                name: 'Pro Video & Photo Editor',
-                description: form.project_type,
-                order_id: data.order.id,
-                prefill: { name: form.name, email: form.email, contact: form.mobile },
-                theme: { color: '#d4af37' },
-                handler: async (response) => {
-                    // ✅ Fix #10: Verify payment signature server-side before saving
-                    try {
-                        const verifyRes = await api.post('/payment/verify', {
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                        });
-                        if (!verifyRes.data.success) {
-                            toast.error('Payment verification failed. Please contact us.');
-                            return;
-                        }
-                    } catch {
-                        toast.error('Could not verify payment. Please contact us via WhatsApp.');
-                        return;
-                    }
-                    await saveOrder({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                    });
-                },
-            });
-            rzp.on('payment.failed', () => toast.error('Payment failed. Please try again.'));
-            rzp.open();
-        } catch (err) {
-            toast.error('Payment initialization failed. Please try again or contact us via WhatsApp.');
-        }
+    // Called after user uploads payment screenshot in UPI modal
+    const handleUpiPaid = async (screenshotInfo) => {
+        setShowUpiModal(false);
+        await saveOrder({
+            payment_status: 'pending_verification',
+            payment_screenshot: screenshotInfo?.file_path || null,
+        });
     };
 
     const saveOrder = async (paymentData) => {
@@ -220,7 +321,8 @@ export default function OrderForm() {
                     <h1 className="order-success__title">Order Placed Successfully!</h1>
                     <p className="order-success__desc">
                         Thank you, <strong>{form.name}</strong>! Your order has been received.
-                        We will start working on your project and contact you soon.
+                        {amount > 0 && ' Payment screenshot received — we will verify and confirm soon.'}
+                        {' '}We will contact you shortly.
                     </p>
                     <div className="order-success__actions">
                         <a
@@ -241,6 +343,16 @@ export default function OrderForm() {
 
     return (
         <div className="order-page page-enter">
+            {/* UPI Modal */}
+            {showUpiModal && (
+                <UpiModal
+                    amount={amount}
+                    settings={settings}
+                    onPaid={handleUpiPaid}
+                    onClose={() => setShowUpiModal(false)}
+                />
+            )}
+
             <div className="order-header">
                 <div className="order-header__glow" />
                 <div className="container order-header__content">
@@ -366,13 +478,9 @@ export default function OrderForm() {
                                                 {uploading && ` — Uploading ${uploadProgress}%...`}
                                                 {!uploading && uploadInfo && ' — ✅ Uploaded'}
                                             </p>
-                                            {/* Progress bar */}
                                             {uploading && (
                                                 <div className="file-upload-progress">
-                                                    <div
-                                                        className="file-upload-progress__bar"
-                                                        style={{ width: `${uploadProgress}%` }}
-                                                    />
+                                                    <div className="file-upload-progress__bar" style={{ width: `${uploadProgress}%` }} />
                                                 </div>
                                             )}
                                         </div>
@@ -403,7 +511,7 @@ export default function OrderForm() {
                             {submitting ? (
                                 <><span className="spinner" /> Placing Order...</>
                             ) : amount > 0 ? (
-                                <>💳 Pay ₹{amount.toLocaleString('en-IN')} & Order</>
+                                <>📱 Pay ₹{amount.toLocaleString('en-IN')} via UPI & Order</>
                             ) : (
                                 <>📋 Place Order</>
                             )}
@@ -429,6 +537,15 @@ export default function OrderForm() {
                                     {amount > 0 ? `₹${amount.toLocaleString('en-IN')}` : 'Custom Quote'}
                                 </strong>
                             </div>
+                            {/* UPI indicator */}
+                            {amount > 0 && (
+                                <div className="order-summary__upi-note">
+                                    <span>💳 Payment via UPI</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                        GPay / PhonePe / Paytm
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="order-help card-glass" style={{ padding: '20px', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>

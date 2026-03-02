@@ -33,7 +33,8 @@ async function notifyNewOrder(order) {
             <tr><td style="padding:8px 0;color:#9999aa">Email</td><td style="padding:8px 0">${order.email}</td></tr>
             <tr><td style="padding:8px 0;color:#9999aa">Project Type</td><td style="padding:8px 0;color:#d4af37;font-weight:600">${order.project_type}</td></tr>
             <tr><td style="padding:8px 0;color:#9999aa">Amount</td><td style="padding:8px 0;font-size:1.2em;font-weight:700;color:#d4af37">₹${order.amount || 'Custom'}</td></tr>
-            <tr><td style="padding:8px 0;color:#9999aa">Payment</td><td style="padding:8px 0">${order.payment_status === 'paid' ? '✅ Paid' : '⏳ Unpaid'}</td></tr>
+             <tr><td style="padding:8px 0;color:#9999aa">Payment</td><td style="padding:8px 0">${order.payment_status === 'paid' ? '✅ Paid' : order.payment_status === 'pending_verification' ? '🕐 UPI - Pending Verification' : '⏳ Unpaid'}</td></tr>
+             ${order.payment_screenshot ? `<tr><td style="padding:8px 0;color:#9999aa">UPI Screenshot</td><td style="padding:8px 0"><a href="${order.payment_screenshot}" style="color:#d4af37">View Screenshot</a></td></tr>` : ''}
             <tr><td style="padding:8px 0;color:#9999aa">Deadline</td><td style="padding:8px 0">${order.deadline || 'Not specified'}</td></tr>
             <tr><td style="padding:8px 0;color:#9999aa">Instructions</td><td style="padding:8px 0">${order.instructions || '—'}</td></tr>
             <tr><td style="padding:8px 0;color:#9999aa">File</td><td style="padding:8px 0">${order.file_name || 'Not uploaded'}</td></tr>
@@ -58,14 +59,17 @@ router.post('/', async (req, res) => {
             name, mobile, email, project_type,
             deadline, instructions, amount,
             file_path, file_name,
-            razorpay_order_id, razorpay_payment_id
+            razorpay_order_id, razorpay_payment_id,
+            payment_screenshot, payment_status: providedPaymentStatus
         } = req.body;
 
         if (!name || !mobile || !email || !project_type) {
             return res.status(400).json({ error: 'Name, mobile, email, and project type are required' });
         }
 
-        const payment_status = razorpay_payment_id ? 'paid' : 'unpaid';
+        // Determine payment status: Razorpay paid → paid, UPI submitted → pending_verification, else unpaid
+        const payment_status = razorpay_payment_id ? 'paid'
+            : (providedPaymentStatus || 'unpaid');
         const id = nextId('orders');
         const now = new Date().toISOString();
 
@@ -79,6 +83,7 @@ router.post('/', async (req, res) => {
             amount: amount || 0,
             status: 'pending',
             payment_status,
+            payment_screenshot: payment_screenshot || null,
             razorpay_order_id: razorpay_order_id || null,
             razorpay_payment_id: razorpay_payment_id || null,
             created_at: now,

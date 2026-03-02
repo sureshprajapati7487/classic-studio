@@ -28,6 +28,7 @@ const STATUS_COLORS = {
 const PAYMENT_COLORS = {
     paid: { color: '#22c55e', label: '✅ Paid' },
     unpaid: { color: '#f59e0b', label: '⏳ Unpaid' },
+    pending_verification: { color: '#f97316', label: '🕐 UPI Verify' },
 };
 
 const PORTFOLIO_CATEGORIES = [
@@ -526,6 +527,16 @@ export default function AdminDashboard() {
                                                                     <span style={{ color: PAYMENT_COLORS[order.payment_status]?.color, fontSize: '0.82rem', fontWeight: 600 }}>
                                                                         {PAYMENT_COLORS[order.payment_status]?.label || order.payment_status}
                                                                     </span>
+                                                                    {order.payment_screenshot && (
+                                                                        <a
+                                                                            href={resolveMediaUrl(order.payment_screenshot)}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            style={{ display: 'block', fontSize: '0.72rem', color: 'var(--gold)', marginTop: 3 }}
+                                                                        >
+                                                                            📷 View Screenshot
+                                                                        </a>
+                                                                    )}
                                                                 </td>
                                                                 <td>
                                                                     <span
@@ -896,6 +907,73 @@ export default function AdminDashboard() {
                                                 value={siteSettings.youtube || ''}
                                                 onChange={e => setSiteSettings(p => ({ ...p, youtube: e.target.value }))}
                                             />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* UPI Payment Settings */}
+                                <div className="admin-settings-section card" style={{ marginTop: 20 }}>
+                                    <h3 className="admin-section-title">📱 UPI Payment Settings</h3>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20, marginTop: -8 }}>
+                                        Customers will scan your UPI QR code and upload payment screenshot while ordering.
+                                    </p>
+                                    <div className="admin-settings-grid">
+                                        <div className="form-group">
+                                            <label className="form-label">💳 UPI ID</label>
+                                            <input type="text" className="form-input"
+                                                placeholder="yourname@upi (e.g. suresh@gpay)"
+                                                value={siteSettings.upi_id || ''}
+                                                onChange={e => setSiteSettings(p => ({ ...p, upi_id: e.target.value }))}
+                                            />
+                                            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                                This will be shown to customers with a copy button
+                                            </small>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">🖼️ UPI QR Code Image</label>
+                                            {siteSettings.upi_qr_image ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                    <img
+                                                        src={resolveMediaUrl(siteSettings.upi_qr_image)}
+                                                        alt="UPI QR"
+                                                        style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'contain', background: '#fff', padding: 4, border: '1px solid rgba(212,175,55,0.3)' }}
+                                                    />
+                                                    <div>
+                                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 8 }}>QR set ✅</p>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost"
+                                                            style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+                                                            onClick={() => setSiteSettings(p => ({ ...p, upi_qr_image: '' }))}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <label style={{ cursor: 'pointer' }}>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        style={{ display: 'none' }}
+                                                        onChange={async (e) => {
+                                                            const f = e.target.files[0];
+                                                            if (!f) return;
+                                                            try {
+                                                                const fd = new FormData();
+                                                                fd.append('file', f);
+                                                                const { data } = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                                                setSiteSettings(p => ({ ...p, upi_qr_image: data.file_path }));
+                                                                toast.success('QR image uploaded!');
+                                                            } catch { toast.error('QR upload failed'); }
+                                                        }}
+                                                    />
+                                                    <div className="admin-upload-zone" style={{ padding: '16px', textAlign: 'center', border: '2px dashed rgba(212,175,55,0.25)', borderRadius: 10, cursor: 'pointer' }}>
+                                                        <FiUpload size={20} color="var(--gold)" />
+                                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 6 }}>Click to upload QR image</p>
+                                                    </div>
+                                                </label>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
