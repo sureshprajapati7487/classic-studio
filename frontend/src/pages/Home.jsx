@@ -180,19 +180,32 @@ export default function Home() {
                     <div className="works-grid stagger">
                         {SAMPLE_WORKS.map((work) => (
                             <Link to="/portfolio" key={work.id} className="work-card" style={{ background: work.gradient }}>
-                                {/* Noise overlay */}
-                                <div className="work-card__noise" aria-hidden="true" />
-                                <div className="work-card__inner">
-                                    <div className="work-card__play">
-                                        <FiPlay size={22} />
+                                {/* Cinema gradient — always visible */}
+                                <div className="work-card__gradient" />
+
+                                {/* Top badge */}
+                                <div className="work-card__badges">
+                                    <span className="work-card__type-badge">
+                                        {work.icon} {work.category}
+                                    </span>
+                                </div>
+
+                                {/* Center play ring */}
+                                <div className="work-card__center">
+                                    <div className="work-card__play-ring">
+                                        <FiPlay size={20} style={{ marginLeft: 3 }} />
                                     </div>
-                                    <div className="work-card__hover-overlay" aria-hidden="true">
-                                        <FiEye size={20} />
-                                        <span>View Work</span>
-                                    </div>
-                                    <div className="work-card__info">
-                                        <span className="badge badge-gold">{work.category}</span>
+                                </div>
+
+                                {/* Bottom footer — always visible, hover expands */}
+                                <div className="work-card__foot">
+                                    <div className="work-card__foot-top">
                                         <h3 className="work-card__title">{work.title}</h3>
+                                    </div>
+                                    <div className="work-card__foot-reveal">
+                                        <span className="work-card__cta">
+                                            <FiArrowRight size={13} /> View Work
+                                        </span>
                                     </div>
                                 </div>
                             </Link>

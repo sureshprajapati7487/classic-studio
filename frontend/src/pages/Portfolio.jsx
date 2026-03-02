@@ -352,81 +352,81 @@ export default function Portfolio() {
                             {filtered.map((item, idx) => (
                                 <div
                                     key={item.id}
-                                    className={`portfolio-card ${hoveredId === item.id ? 'portfolio-card--hovered' : ''}`}
+                                    className={`portfolio-card ${idx === 0 && filtered.length >= 3 ? 'portfolio-card--featured' : ''} ${hoveredId === item.id ? 'portfolio-card--hovered' : ''}`}
                                     style={{
                                         background: item.gradient || 'var(--bg-card)',
-                                        animationDelay: `${idx * 0.06}s`,
+                                        animationDelay: `${idx * 0.07}s`,
                                     }}
                                     onMouseEnter={() => setHoveredId(item.id)}
                                     onMouseLeave={() => setHoveredId(null)}
                                     onClick={() => item.file_path && setSelectedItem(item)}
                                 >
-                                    {/* Thumbnail */}
-                                    {item.file_path && (
-                                        item.file_type === 'video' ? (
-                                            <video
-                                                src={item.file_path}
-                                                className="portfolio-card__media"
-                                                muted loop playsInline preload="metadata"
-                                                onMouseEnter={e => e.target.play()}
-                                                onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
-                                            />
-                                        ) : (
-                                            <img
-                                                src={item.file_path}
-                                                alt={item.title}
-                                                className="portfolio-card__media"
-                                                loading="lazy"
-                                            />
-                                        )
+                                    {/* Media */}
+                                    {item.file_type === 'video' ? (
+                                        <video
+                                            src={item.file_path}
+                                            className="portfolio-card__media"
+                                            muted loop playsInline preload="metadata"
+                                            onMouseEnter={e => e.target.play()}
+                                            onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={item.file_path}
+                                            alt={item.title}
+                                            className="portfolio-card__media"
+                                            loading="lazy"
+                                        />
                                     )}
 
-                                    <div className="portfolio-card__overlay" />
+                                    {/* Always-on gradient overlay */}
+                                    <div className="portfolio-card__gradient" />
 
-                                    {/* Play icon */}
-                                    <div className="portfolio-card__content">
-                                        <div className="portfolio-card__icon">
-                                            {item.file_type === 'video' ? <FiPlay size={26} /> : <FiImage size={26} />}
-                                        </div>
-                                        {item.file_path && item.file_type === 'video' && (
-                                            <span className="portfolio-card__play-hint">Click to Watch</span>
-                                        )}
-                                    </div>
-
-                                    {/* 4K badge */}
-                                    {is4k(item) && (
-                                        <div className="portfolio-card__4k-badge">4K</div>
-                                    )}
-
-                                    {/* Price badge */}
-                                    {item.price != null && item.price > 0 && (
-                                        <div className="portfolio-card__price-badge">
-                                            ₹{Number(item.price).toLocaleString('en-IN')}
-                                        </div>
-                                    )}
-                                    {(item.price === 0 || item.price === null) && (
-                                        <div className="portfolio-card__price-badge portfolio-card__price-badge--custom">
-                                            Price on Request
-                                        </div>
-                                    )}
-
-                                    {/* Bottom info */}
-                                    <div className="portfolio-card__info">
-                                        <span className="badge badge-gold" style={{ fontSize: '0.68rem' }}>
+                                    {/* Top badges row */}
+                                    <div className="portfolio-card__badges">
+                                        <span className="portfolio-card__type-badge">
                                             {item.file_type === 'video' ? '🎬 Video' : '📸 Photo'}
                                         </span>
-                                        <h3 className="portfolio-card__title">{item.title}</h3>
-                                        {item.description && (
-                                            <p className="portfolio-card__desc">{item.description}</p>
-                                        )}
-                                        <Link
-                                            to={`/order?type=${encodeURIComponent(item.category)}&amount=${item.price || 0}`}
-                                            className="portfolio-card__order-btn"
-                                            onClick={e => e.stopPropagation()}
-                                        >
-                                            <FiArrowRight size={13} />
-                                            {item.price > 0 ? `Order – ₹${Number(item.price).toLocaleString('en-IN')}` : 'Get Quote'}
-                                        </Link>
+                                        {is4k(item) && <span className="portfolio-card__4k">4K</span>}
+                                    </div>
+
+                                    {/* Center play button — always visible, glows on hover */}
+                                    <div className="portfolio-card__center">
+                                        <div className="portfolio-card__play-ring">
+                                            {item.file_type === 'video'
+                                                ? <FiPlay size={22} style={{ marginLeft: 3 }} />
+                                                : <FiImage size={20} />}
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom info — always visible title, hover expands */}
+                                    <div className="portfolio-card__foot">
+                                        <div className="portfolio-card__foot-top">
+                                            <h3 className="portfolio-card__title">{item.title}</h3>
+                                            {item.price != null && item.price > 0 && (
+                                                <span className="portfolio-card__price">
+                                                    ₹{Number(item.price).toLocaleString('en-IN')}
+                                                </span>
+                                            )}
+                                            {(item.price === 0 || item.price === null) && (
+                                                <span className="portfolio-card__price portfolio-card__price--free">
+                                                    On Request
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="portfolio-card__foot-reveal">
+                                            {item.description && (
+                                                <p className="portfolio-card__desc">{item.description}</p>
+                                            )}
+                                            <Link
+                                                to={`/order?type=${encodeURIComponent(item.category)}&amount=${item.price || 0}`}
+                                                className="portfolio-card__cta"
+                                                onClick={e => e.stopPropagation()}
+                                            >
+                                                <FiArrowRight size={14} />
+                                                {item.price > 0 ? `Order – ₹${Number(item.price).toLocaleString('en-IN')}` : 'Get Free Quote'}
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
