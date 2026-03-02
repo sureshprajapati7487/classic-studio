@@ -4,7 +4,7 @@ import {
     FiPlay, FiImage, FiArrowRight, FiX, FiMaximize, FiMinimize,
     FiVolume2, FiVolumeX, FiPause
 } from 'react-icons/fi';
-import api from '../api';
+import api, { resolveMediaUrl } from '../api';
 import './Portfolio.css';
 
 const CATEGORIES = [
@@ -372,7 +372,7 @@ export default function Portfolio() {
                                     {/* Media */}
                                     {item.file_type === 'video' ? (
                                         <video
-                                            src={item.file_path}
+                                            src={resolveMediaUrl(item.file_path)}
                                             className="portfolio-card__media"
                                             muted loop playsInline preload="metadata"
                                             onMouseEnter={e => e.target.play()}
@@ -380,7 +380,7 @@ export default function Portfolio() {
                                         />
                                     ) : (
                                         <img
-                                            src={item.file_path}
+                                            src={resolveMediaUrl(item.file_path)}
                                             alt={item.title}
                                             className="portfolio-card__media"
                                             loading="lazy"
@@ -469,14 +469,14 @@ export default function Portfolio() {
                         {selectedItem.file_type === 'video' ? (
                             <PremiumVideoPlayer
                                 key={selectedItem.id}
-                                src={selectedItem.file_path}
+                                src={resolveMediaUrl(selectedItem.file_path)}
                                 title={selectedItem.title}
                                 is4k={is4k(selectedItem)}
                             />
                         ) : (
                             <div className="plb-image-wrap">
                                 <img
-                                    src={selectedItem.file_path}
+                                    src={resolveMediaUrl(selectedItem.file_path)}
                                     alt={selectedItem.title}
                                     className="plb-image"
                                 />
