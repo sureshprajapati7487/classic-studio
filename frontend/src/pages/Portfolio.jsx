@@ -97,11 +97,19 @@ function PremiumVideoPlayer({ src, title, is4k }) {
         };
     }, []);
 
-    // Auto-play on mount
+    // Auto-play + auto-fullscreen on mount
     useEffect(() => {
         const vid = videoRef.current;
+        const container = containerRef.current;
         if (vid) {
             vid.play().catch(() => { });
+        }
+        // Request fullscreen on the player container
+        if (container) {
+            const req = container.requestFullscreen || container.webkitRequestFullscreen || container.mozRequestFullScreen;
+            if (req) {
+                setTimeout(() => req.call(container).catch(() => { }), 120);
+            }
         }
     }, [src]);
 
@@ -443,11 +451,17 @@ export default function Portfolio() {
 
             {/* ════════ PREMIUM LIGHTBOX MODAL ════════ */}
             {selectedItem && (
-                <div className="plb-overlay" onClick={() => setSelectedItem(null)}>
+                <div className="plb-overlay" onClick={() => {
+                    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => { });
+                    setSelectedItem(null);
+                }}>
                     <div className="plb-box" onClick={e => e.stopPropagation()}>
 
                         {/* Close button */}
-                        <button className="plb-close" onClick={() => setSelectedItem(null)}>
+                        <button className="plb-close" onClick={() => {
+                            if (document.fullscreenElement) document.exitFullscreen?.().catch(() => { });
+                            setSelectedItem(null);
+                        }}>
                             <FiX size={20} />
                         </button>
 
