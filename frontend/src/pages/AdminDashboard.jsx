@@ -6,7 +6,7 @@ import {
     FiClock, FiDollarSign, FiAlertCircle, FiChevronDown, FiEye, FiEyeOff,
     FiSearch, FiFilter, FiPlay
 } from 'react-icons/fi';
-import api from '../api'; // shared axios instance (auth interceptor already set)
+import api, { resolveMediaUrl } from '../api'; // shared axios instance (auth interceptor already set)
 import toast from 'react-hot-toast';
 import { useSettings } from '../context/SettingsContext';
 import './AdminDashboard.css';
@@ -759,14 +759,14 @@ export default function AdminDashboard() {
                                                 <div className="admin-portfolio-item__preview">
                                                     {item.file_type === 'video' ? (
                                                         <video
-                                                            src={item.file_path}
+                                                            src={resolveMediaUrl(item.file_path)}
                                                             className="admin-portfolio-item__media"
                                                             muted
                                                             id={`vid-${item.id}`}
                                                             onEnded={() => setPlayingVideos(p => ({ ...p, [item.id]: false }))}
                                                         />
                                                     ) : (
-                                                        <img src={item.file_path} alt={item.title} className="admin-portfolio-item__media" />
+                                                        <img src={resolveMediaUrl(item.file_path)} alt={item.title} className="admin-portfolio-item__media" />
                                                     )}
                                                     <div className="admin-portfolio-item__overlay">
                                                         {item.file_type === 'video' && (
