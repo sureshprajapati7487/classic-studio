@@ -4,8 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db, nextId } = require('../db');
 const { verifyToken } = require('../middleware/auth');
-const dotenv = require('dotenv');
-dotenv.config({ quiet: true });
+// Note: JWT_SECRET loaded by server.js via dotenv — no need to reload here
 
 // POST /api/admin/register — Create new admin account with invite code
 router.post('/register', async (req, res) => {
@@ -62,7 +61,7 @@ router.post('/register', async (req, res) => {
         }).write();
 
         // Issue token so user is logged in immediately after register
-        const token = jwt.sign({ id, email, username }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
+        const token = jwt.sign({ id, email, username }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
         res.status(201).json({
             success: true,
@@ -92,7 +91,7 @@ router.post('/login', (req, res) => {
 
         const token = jwt.sign(
             { id: admin.id, email: admin.email },
-            process.env.JWT_SECRET || 'secret',
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
@@ -161,6 +160,19 @@ router.patch('/orders/:id/status', verifyToken, (req, res) => {
         res.json({ success: true, order: updated });
     } catch (err) {
         res.status(500).json({ error: 'Failed to update order status' });
+    }
+});
+
+// DELETE /api/admin/orders/:id — Permanently delete an order
+router.delete('/orders/:id', verifyToken, (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const order = db.get('orders').find({ id }).value();
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        db.get('orders').remove({ id }).write();
+        res.json({ success: true, message: `Order #${id} deleted successfully` });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete order' });
     }
 });
 

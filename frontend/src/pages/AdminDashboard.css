@@ -890,3 +890,224 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* ===== ORDERS TOOLBAR (Search + Filter) ===== */
+.admin-orders-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.admin-orders-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 220px;
+}
+
+.admin-orders-search__icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.admin-orders-search__input {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 9px 36px 9px 36px;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color var(--trans-fast);
+}
+
+.admin-orders-search__input:focus {
+    border-color: var(--gold);
+}
+
+.admin-orders-search__input::placeholder {
+    color: var(--text-muted);
+}
+
+.admin-orders-search__clear {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    transition: color var(--trans-fast);
+}
+
+.admin-orders-search__clear:hover {
+    color: var(--text-primary);
+}
+
+.admin-orders-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-filter-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--trans-fast);
+}
+
+.admin-filter-select:focus {
+    border-color: var(--gold);
+}
+
+/* ===== ORDERS TABLE: Actions cell ===== */
+.admin-table__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-order-delete {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 7px;
+    color: #ef4444;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--trans-fast);
+    flex-shrink: 0;
+}
+
+.admin-order-delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    transform: scale(1.08);
+}
+
+/* ===== PORTFOLIO VIDEO PLAY BUTTON ===== */
+.admin-portfolio-item__play {
+    background: rgba(212, 175, 55, 0.2);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    color: var(--gold);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--trans-fast);
+    font-size: 1rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.admin-portfolio-item__play:hover {
+    background: rgba(212, 175, 55, 0.4);
+    transform: scale(1.1);
+}
+
+@media (max-width: 640px) {
+    .admin-orders-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-orders-filters {
+        flex-wrap: wrap;
+    }
+
+    .admin-filter-select {
+        flex: 1;
+    }
+}
+
+/* ===== ORDERS PAGINATION ===== */
+.admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-pagination__btn {
+    padding: 7px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--trans-fast);
+}
+
+.admin-pagination__btn:hover:not(:disabled) {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.admin-pagination__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.admin-pagination__pages {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.admin-pagination__page {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--trans-fast);
+}
+
+.admin-pagination__page:hover {
+    border-color: rgba(212, 175, 55, 0.4);
+    color: var(--gold);
+}
+
+.admin-pagination__page--active {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border-color: var(--gold);
+    color: #000;
+}

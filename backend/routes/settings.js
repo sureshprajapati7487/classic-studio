@@ -6,8 +6,10 @@ const { verifyToken } = require('../middleware/auth');
 // GET /api/settings — Public: frontend reads this for dynamic config
 router.get('/', (req, res) => {
     try {
-        const settings = db.get('site_settings').value();
-        res.json({ success: true, settings });
+        const all = db.get('site_settings').value();
+        // Strip sensitive fields — never expose to public visitors
+        const { smtp_password, razorpay_key_secret, admin_invite_code, notify_email, ...publicSettings } = all;
+        res.json({ success: true, settings: publicSettings });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch settings' });
     }

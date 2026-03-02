@@ -3,20 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
     FiLogOut, FiPackage, FiMessageSquare, FiImage, FiSettings,
     FiRefreshCw, FiUpload, FiTrash2, FiX, FiCheck, FiSave, FiPlus,
-    FiClock, FiDollarSign, FiAlertCircle, FiChevronDown, FiEye, FiEyeOff
+    FiClock, FiDollarSign, FiAlertCircle, FiChevronDown, FiEye, FiEyeOff,
+    FiSearch, FiFilter, FiPlay
 } from 'react-icons/fi';
-import axios from 'axios';
+import api from '../api'; // shared axios instance (auth interceptor already set)
 import toast from 'react-hot-toast';
 import { useSettings } from '../context/SettingsContext';
 import './AdminDashboard.css';
-
-// Axios instance with auth header
-const api = axios.create({ baseURL: '/api' });
-api.interceptors.request.use(cfg => {
-    const token = localStorage.getItem('admin_token');
-    if (token) cfg.headers.Authorization = `Bearer ${token}`;
-    return cfg;
-});
 
 const TABS = [
     { id: 'orders', label: 'Orders', icon: <FiPackage /> },
@@ -66,6 +59,14 @@ export default function AdminDashboard() {
     const [resetPwMap, setResetPwMap] = useState({}); // { [adminId]: password value }
     const [inviteCode, setInviteCode] = useState('');
     const [savingInviteCode, setSavingInviteCode] = useState(false);
+    // Orders search & filter
+    const [orderSearch, setOrderSearch] = useState('');
+    const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+    const [orderPaymentFilter, setOrderPaymentFilter] = useState('all');
+    const [orderPage, setOrderPage] = useState(1);
+    const ORDERS_PER_PAGE = 10;
+    // Portfolio video play state
+    const [playingVideos, setPlayingVideos] = useState({}); // { [itemId]: bool }
 
 
     // Auth guard
@@ -112,11 +113,34 @@ export default function AdminDashboard() {
 
     const updateOrderStatus = async (id, status) => {
         try {
-            await api.patch(`/orders/${id}/status`, { status });
+            // Using /admin/orders/:id/status — verifyToken middleware protected route
+            await api.patch(`/admin/orders/${id}/status`, { status });
             setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
             toast.success(`Order #${id} marked as "${STATUS_COLORS[status].label}"`);
         } catch {
             toast.error('Failed to update order status');
+        }
+    };
+
+    const deleteOrder = async (id) => {
+        if (!window.confirm(`Order #${id} permanently delete karna chahte ho? Yeh wapas nahi aayega!`)) return;
+        try {
+            await api.delete(`/admin/orders/${id}`);
+            setOrders(prev => {
+                const remaining = prev.filter(o => o.id !== id);
+                // Recalculate all stats from remaining orders
+                const total = remaining.length;
+                const pending = remaining.filter(o => o.status === 'pending').length;
+                const done = remaining.filter(o => o.status === 'done').length;
+                const revenue = remaining
+                    .filter(o => o.payment_status === 'paid')
+                    .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+                setStats(s => ({ ...s, total, pending, done, revenue }));
+                return remaining;
+            });
+            toast.success(`Order #${id} delete ho gaya`);
+        } catch {
+            toast.error('Order delete karne mein problem aayi');
         }
     };
 
@@ -389,84 +413,193 @@ export default function AdminDashboard() {
                                     ))}
                                 </div>
 
-                                {/* Orders Table */}
-                                {orders.length === 0 ? (
-                                    <div className="admin-empty">
-                                        <FiPackage size={48} />
-                                        <p>No orders yet. Orders will appear here when clients place them.</p>
-                                    </div>
-                                ) : (
-                                    <div className="admin-table-wrap">
-                                        <table className="admin-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>#ID</th>
-                                                    <th>Client</th>
-                                                    <th>Project Type</th>
-                                                    <th>Amount</th>
-                                                    <th>Payment</th>
-                                                    <th>Status</th>
-                                                    <th>Date</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {orders.map(order => (
-                                                    <tr key={order.id} className="admin-table__row">
-                                                        <td className="admin-table__id">#{order.id}</td>
-                                                        <td>
-                                                            <div className="admin-table__client">
-                                                                <strong>{order.name}</strong>
-                                                                <span>{order.email}</span>
-                                                                <span>{order.mobile}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <span className="admin-table__type">{order.project_type}</span>
-                                                            {order.deadline && <span className="admin-table__deadline">📅 {order.deadline}</span>}
-                                                        </td>
-                                                        <td>
-                                                            <strong style={{ color: 'var(--gold)' }}>
-                                                                {order.amount > 0 ? `₹${order.amount}` : 'Custom'}
-                                                            </strong>
-                                                        </td>
-                                                        <td>
-                                                            <span style={{ color: PAYMENT_COLORS[order.payment_status]?.color, fontSize: '0.82rem', fontWeight: 600 }}>
-                                                                {PAYMENT_COLORS[order.payment_status]?.label || order.payment_status}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span
-                                                                className="admin-status-badge"
-                                                                style={{
-                                                                    background: STATUS_COLORS[order.status]?.bg,
-                                                                    color: STATUS_COLORS[order.status]?.color
-                                                                }}
-                                                            >
-                                                                {STATUS_COLORS[order.status]?.label || order.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="admin-table__date">
-                                                            {new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                        </td>
-                                                        <td>
-                                                            <select
-                                                                className="admin-status-select"
-                                                                value={order.status}
-                                                                onChange={e => updateOrderStatus(order.id, e.target.value)}
-                                                            >
-                                                                <option value="pending">Pending</option>
-                                                                <option value="in_progress">In Progress</option>
-                                                                <option value="done">Done</option>
-                                                                <option value="cancelled">Cancelled</option>
-                                                            </select>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                {/* Search & Filter Bar */}
+                                {orders.length > 0 && (
+                                    <div className="admin-orders-toolbar">
+                                        <div className="admin-orders-search">
+                                            <FiSearch size={15} className="admin-orders-search__icon" />
+                                            <input
+                                                type="text"
+                                                className="admin-orders-search__input"
+                                                placeholder="Search by name, email or mobile..."
+                                                value={orderSearch}
+                                                onChange={e => { setOrderSearch(e.target.value); setOrderPage(1); }}
+                                            />
+                                            {orderSearch && (
+                                                <button className="admin-orders-search__clear" onClick={() => setOrderSearch('')}>
+                                                    <FiX size={13} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="admin-orders-filters">
+                                            <FiFilter size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                                            <select
+                                                className="admin-filter-select"
+                                                value={orderStatusFilter}
+                                                onChange={e => { setOrderStatusFilter(e.target.value); setOrderPage(1); }}
+                                            >
+                                                <option value="all">All Status</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="in_progress">In Progress</option>
+                                                <option value="done">Done</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                            <select
+                                                className="admin-filter-select"
+                                                value={orderPaymentFilter}
+                                                onChange={e => { setOrderPaymentFilter(e.target.value); setOrderPage(1); }}
+                                            >
+                                                <option value="all">All Payment</option>
+                                                <option value="paid">Paid</option>
+                                                <option value="unpaid">Unpaid</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 )}
+
+                                {/* Orders Table */}
+                                {(() => {
+                                    const q = orderSearch.toLowerCase().trim();
+                                    const filtered = orders.filter(o => {
+                                        const matchSearch = !q || o.name?.toLowerCase().includes(q) || o.email?.toLowerCase().includes(q) || o.mobile?.includes(q);
+                                        const matchStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
+                                        const matchPayment = orderPaymentFilter === 'all' || o.payment_status === orderPaymentFilter;
+                                        return matchSearch && matchStatus && matchPayment;
+                                    });
+                                    const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
+                                    const safePage = Math.min(orderPage, Math.max(1, totalPages));
+                                    const paginated = filtered.slice((safePage - 1) * ORDERS_PER_PAGE, safePage * ORDERS_PER_PAGE);
+
+                                    if (orders.length === 0) return (
+                                        <div className="admin-empty">
+                                            <FiPackage size={48} />
+                                            <p>No orders yet. Orders will appear here when clients place them.</p>
+                                        </div>
+                                    );
+                                    if (filtered.length === 0) return (
+                                        <div className="admin-empty">
+                                            <FiSearch size={40} />
+                                            <p>Koi order nahi mila. Filter ya search clear karo.</p>
+                                        </div>
+                                    );
+                                    return (
+                                        <div>
+                                            <div className="admin-table-wrap">
+                                                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                                                    {filtered.length} of {orders.length} order{orders.length !== 1 ? 's' : ''} shown
+                                                    {totalPages > 1 && ` — Page ${safePage} of ${totalPages}`}
+                                                </p>
+                                                <table className="admin-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#ID</th>
+                                                            <th>Client</th>
+                                                            <th>Project Type</th>
+                                                            <th>Amount</th>
+                                                            <th>Payment</th>
+                                                            <th>Status</th>
+                                                            <th>Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {paginated.map(order => (
+                                                            <tr key={order.id} className="admin-table__row">
+                                                                <td className="admin-table__id">#{order.id}</td>
+                                                                <td>
+                                                                    <div className="admin-table__client">
+                                                                        <strong>{order.name}</strong>
+                                                                        <span>{order.email}</span>
+                                                                        <span>{order.mobile}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <span className="admin-table__type">{order.project_type}</span>
+                                                                    {order.deadline && <span className="admin-table__deadline">📅 {order.deadline}</span>}
+                                                                </td>
+                                                                <td>
+                                                                    <strong style={{ color: 'var(--gold)' }}>
+                                                                        {order.amount > 0 ? `₹${order.amount}` : 'Custom'}
+                                                                    </strong>
+                                                                </td>
+                                                                <td>
+                                                                    <span style={{ color: PAYMENT_COLORS[order.payment_status]?.color, fontSize: '0.82rem', fontWeight: 600 }}>
+                                                                        {PAYMENT_COLORS[order.payment_status]?.label || order.payment_status}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span
+                                                                        className="admin-status-badge"
+                                                                        style={{
+                                                                            background: STATUS_COLORS[order.status]?.bg,
+                                                                            color: STATUS_COLORS[order.status]?.color
+                                                                        }}
+                                                                    >
+                                                                        {STATUS_COLORS[order.status]?.label || order.status}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="admin-table__date">
+                                                                    {new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="admin-table__actions">
+                                                                        <select
+                                                                            className="admin-status-select"
+                                                                            value={order.status}
+                                                                            onChange={e => updateOrderStatus(order.id, e.target.value)}
+                                                                        >
+                                                                            <option value="pending">Pending</option>
+                                                                            <option value="in_progress">In Progress</option>
+                                                                            <option value="done">Done</option>
+                                                                            <option value="cancelled">Cancelled</option>
+                                                                        </select>
+                                                                        <button
+                                                                            className="admin-order-delete"
+                                                                            onClick={() => deleteOrder(order.id)}
+                                                                            title="Delete order"
+                                                                        >
+                                                                            <FiTrash2 size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {/* Pagination Controls */}
+                                            {totalPages > 1 && (
+                                                <div className="admin-pagination">
+                                                    <button
+                                                        className="admin-pagination__btn"
+                                                        onClick={() => setOrderPage(p => Math.max(1, p - 1))}
+                                                        disabled={safePage === 1}
+                                                    >
+                                                        ← Prev
+                                                    </button>
+                                                    <div className="admin-pagination__pages">
+                                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                                                            <button
+                                                                key={pg}
+                                                                className={`admin-pagination__page ${pg === safePage ? 'admin-pagination__page--active' : ''}`}
+                                                                onClick={() => setOrderPage(pg)}
+                                                            >
+                                                                {pg}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <button
+                                                        className="admin-pagination__btn"
+                                                        onClick={() => setOrderPage(p => Math.min(totalPages, p + 1))}
+                                                        disabled={safePage === totalPages}
+                                                    >
+                                                        Next →
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
 
@@ -625,14 +758,42 @@ export default function AdminDashboard() {
                                             <div key={item.id} className="admin-portfolio-item card">
                                                 <div className="admin-portfolio-item__preview">
                                                     {item.file_type === 'video' ? (
-                                                        <video src={item.file_path} className="admin-portfolio-item__media" muted />
+                                                        <video
+                                                            src={item.file_path}
+                                                            className="admin-portfolio-item__media"
+                                                            muted
+                                                            id={`vid-${item.id}`}
+                                                            onEnded={() => setPlayingVideos(p => ({ ...p, [item.id]: false }))}
+                                                        />
                                                     ) : (
                                                         <img src={item.file_path} alt={item.title} className="admin-portfolio-item__media" />
                                                     )}
                                                     <div className="admin-portfolio-item__overlay">
+                                                        {item.file_type === 'video' && (
+                                                            <button
+                                                                className="admin-portfolio-item__play"
+                                                                onClick={() => {
+                                                                    const vid = document.getElementById(`vid-${item.id}`);
+                                                                    if (!vid) return;
+                                                                    if (playingVideos[item.id]) {
+                                                                        vid.pause();
+                                                                        setPlayingVideos(p => ({ ...p, [item.id]: false }));
+                                                                    } else {
+                                                                        vid.play();
+                                                                        setPlayingVideos(p => ({ ...p, [item.id]: true }));
+                                                                    }
+                                                                }}
+                                                                title={playingVideos[item.id] ? 'Pause' : 'Play video'}
+                                                            >
+                                                                {playingVideos[item.id] ? '⏸' : <FiPlay size={18} />}
+                                                            </button>
+                                                        )}
                                                         <button
                                                             className="admin-portfolio-item__delete"
-                                                            onClick={() => deletePortfolioItem(item.id)}
+                                                            onClick={() => {
+                                                                if (!window.confirm(`"${item.title}" permanently delete karein? File bhi disk se hategi!`)) return;
+                                                                deletePortfolioItem(item.id);
+                                                            }}
                                                         >
                                                             <FiTrash2 size={16} />
                                                         </button>
@@ -953,28 +1114,17 @@ export default function AdminDashboard() {
                                     </button>
                                 </div>
 
-                                {/* Dummy spacer */}
+                                {/* Spacer before invite code section */}
                                 <div style={{ height: 20 }} />
-                                <div className="admin-settings-save">
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={saveSettings}
-                                        disabled={savingSettings}
-                                    >
-                                        {savingSettings
-                                            ? <><span className="spinner" /> Saving...</>
-                                            : <><FiSave size={16} /> Save All Settings</>}
-                                    </button>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: 0 }}>
-                                        Changes go live on website immediately after saving.
-                                    </p>
-                                </div>
 
                                 {/* Invite Code */}
                                 <div className="admin-settings-section card" style={{ marginTop: 24, borderColor: 'rgba(212,175,55,0.3)' }}>
                                     <h3 className="admin-section-title">🔑 Registration Invite Code</h3>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 14, marginTop: -8 }}>
-                                        Naya admin account banane ke liye yeh code chahiye hota hai. Current code: <code style={{ color: 'var(--gold)', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: 4 }}>SURESH8824</code>
+                                        Naya admin account banane ke liye yeh code chahiye hota hai.{' '}
+                                        {siteSettings.admin_invite_code && (
+                                            <>Current code: <code style={{ color: 'var(--gold)', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: 4 }}>{siteSettings.admin_invite_code}</code></>
+                                        )}
                                     </p>
                                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                                         <div className="form-group" style={{ flex: 1, minWidth: 200, margin: 0 }}>

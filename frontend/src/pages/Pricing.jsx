@@ -78,6 +78,20 @@ const FAQS = [
 const PLAN_ICONS = { basic: '✂️', advanced: '🎬', pro: '🎞️' };
 const PLAN_COLORS = { basic: '#9999aa', advanced: '#d4af37', pro: '#c0c0c0' };
 
+// Get icon for any plan — known IDs first, then keyword matching on name
+function getPlanIcon(plan) {
+    if (PLAN_ICONS[plan.id]) return PLAN_ICONS[plan.id];
+    const n = (plan.name || '').toLowerCase();
+    if (n.includes('wedding')) return '💍';
+    if (n.includes('reel') || n.includes('short')) return '📱';
+    if (n.includes('youtube') || n.includes('vlog')) return '▶️';
+    if (n.includes('photo') || n.includes('retouch')) return '📸';
+    if (n.includes('color') || n.includes('grade')) return '🎨';
+    if (n.includes('cinema')) return '🎞️';
+    return '🎬'; // universal fallback
+}
+
+
 export default function Pricing() {
     const { settings } = useSettings();
     const [openFaq, setOpenFaq] = useState(null);
@@ -120,7 +134,7 @@ export default function Pricing() {
                                 )}
 
                                 <div className="plan-card__header">
-                                    <span className="plan-card__icon">{PLAN_ICONS[plan.id] || '🎬'}</span>
+                                    <span className="plan-card__icon">{getPlanIcon(plan)}</span>
                                     <h3 className="plan-card__name">{plan.name}</h3>
                                     {plan.desc && <p className="plan-card__desc">{plan.desc}</p>}
                                 </div>

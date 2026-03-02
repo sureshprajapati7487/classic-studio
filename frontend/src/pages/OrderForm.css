@@ -414,3 +414,33 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ══════════════════════════════════════════
+   FILE UPLOAD PROGRESS BAR
+══════════════════════════════════════════ */
+.file-upload-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.file-upload-progress__bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+    border-radius: 999px;
+    transition: width 0.2s ease;
+    background-size: 200% 100%;
+    animation: progress-shine 1.5s linear infinite;
+}
+
+@keyframes progress-shine {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: -100% 0;
+    }
+}

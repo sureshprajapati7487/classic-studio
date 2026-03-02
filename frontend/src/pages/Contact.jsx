@@ -29,7 +29,15 @@ export default function Contact() {
         {
             icon: <FiInstagram size={28} />,
             title: 'Instagram',
-            value: '@yourprofile',
+            // Extract @username from URL (e.g. https://instagram.com/myprofile → @myprofile)
+            value: (() => {
+                try {
+                    const path = new URL(INSTAGRAM_URL).pathname.replace(/\//g, '');
+                    return path ? `@${path}` : '@instagram';
+                } catch {
+                    return '@instagram';
+                }
+            })(),
             desc: 'Check out our latest work and DM us',
             href: INSTAGRAM_URL,
             color: '#e1306c',
@@ -58,7 +66,7 @@ export default function Contact() {
         },
     ];
 
-    const [form, setForm] = useState({ name: '', email: '', mobile: '', message: '' });
+    const [form, setForm] = useState({ name: '', email: '', mobile: '', message: '', website: '' });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
@@ -66,8 +74,11 @@ export default function Contact() {
     const validate = () => {
         const e = {};
         if (!form.name.trim()) e.name = 'Name is required';
-        if (!form.email.includes('@')) e.email = 'Enter a valid email';
+        if (!form.name.trim() || form.name.length > 100) e.name = form.name.length > 100 ? 'Name too long (max 100)' : 'Name is required';
+        const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!EMAIL_RE.test(form.email)) e.email = 'Enter a valid email (e.g. name@gmail.com)';
         if (!form.message.trim()) e.message = 'Message cannot be empty';
+        if (form.message.length > 2000) e.message = 'Message too long (max 2000 characters)';
         return e;
     };
 
@@ -78,6 +89,8 @@ export default function Contact() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Honeypot: bot filled the hidden field
+        if (form.website) { setForm(prev => ({ ...prev, name: '', email: '', mobile: '', message: '', website: '' })); return; }
         const errs = validate();
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
@@ -213,6 +226,20 @@ export default function Contact() {
                                             onChange={handleChange('message')}
                                         />
                                         {errors.message && <span className="form-error"><FiAlertCircle size={12} /> {errors.message}</span>}
+                                    </div>
+
+                                    {/* Honeypot — hidden from humans, bots fill it */}
+                                    <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+                                        <label htmlFor="website">Website (do not fill)</label>
+                                        <input
+                                            type="text"
+                                            id="website"
+                                            name="website"
+                                            tabIndex={-1}
+                                            autoComplete="off"
+                                            value={form.website}
+                                            onChange={handleChange('website')}
+                                        />
                                     </div>
 
                                     <button type="submit" className="btn btn-primary contact-submit" disabled={loading}>

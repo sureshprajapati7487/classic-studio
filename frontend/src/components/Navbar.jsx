@@ -55,9 +55,17 @@ export default function Navbar() {
         <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
             <div className="container navbar__inner" ref={menuRef}>
 
-                {/* Logo */}
+                {/* Logo — falls back to text if /logo.png is missing */}
                 <Link to="/" className="navbar__logo">
-                    <img src="/logo.png" alt="Classic Studio" className="navbar__logo-img" />
+                    <img
+                        src="/logo.png"
+                        alt="Classic Studio"
+                        className="navbar__logo-img"
+                        onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                    />
+                    <span className="navbar__logo-text" style={{ display: 'none' }}>
+                        {settings.studio_name || 'Classic Studio'}
+                    </span>
                 </Link>
 
                 {/* Desktop Nav */}

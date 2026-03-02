@@ -2,10 +2,37 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config({ quiet: true });
 
 const app = express();
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+// Global: 100 requests per 15 minutes per IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
+});
+
+// Strict: 5 login attempts per 15 minutes (brute-force protection)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many login attempts. Please wait 15 minutes before trying again.' },
+});
+
+// Contact / order form: 20 per 15 minutes (anti-spam)
+const formLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many submissions. Please wait a while and try again.' },
+});
+
+app.use(globalLimiter);
 
 // Middleware
 app.use(cors({
@@ -39,14 +66,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const { initializeDB } = require('./db');
 initializeDB();
 
-// Routes
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/contact', require('./routes/contact'));
+// Routes — apply targeted rate limiters where needed
+app.use('/api/orders', formLimiter, require('./routes/orders'));
+app.use('/api/contact', formLimiter, require('./routes/contact'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/admin/login', loginLimiter);    // brute-force on login
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/portfolio', require('./routes/portfolio'));
 app.use('/api/settings', require('./routes/settings'));
+
 
 // Health check
 app.get('/api/health', (req, res) => {

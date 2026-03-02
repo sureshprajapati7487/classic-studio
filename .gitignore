@@ -10,6 +10,7 @@ node_modules/
 backend/editor.db
 backend/editor.db-shm
 backend/editor.db-wal
+backend/editor.db.json
 
 # Build output
 frontend/dist/

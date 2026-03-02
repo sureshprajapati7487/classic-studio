@@ -7,22 +7,19 @@ git push
 
 
 
-🎉 Website LIVE hai! Deployment Complete!
-Status: Ready ✅
+🎉 Sab kuch done! Website permanently live hai!
 
-🌐 Aapki Website ke Links:
-URL
+✅ Aapka Complete Setup:
+Link
 🌍 Website	classic-studio.vercel.app
-⚙️ Backend API	classicstudio-api.onrender.com
 🔒 Admin Panel	classic-studio.vercel.app/admin/login
-"Visit" button pe click karo — website khul jayegi! 🚀
-
-🔄 Aage update kaise karo:
-Jab bhi website update karni ho, terminal mein sirf yeh chalao:
-
-cd "D:\Projects\Professional Video & Photo Editor"
+⚙️ Backend	classicstudio-api.onrender.com
+💾 GitHub Code	github.com/sureshprajapati7487/classic-studio
+🔄 Update karna ho toh (future mein):
+bash
 git add .
-git commit -m "Update - kya badla"
+git commit -m "kya badla likho"
 git push
-Push hone ke baad Vercel + Render automatically redeploy kar denge! PC band ho — website chalti rahegi! ✅
+Bas itna karo — Vercel + Render automatically update kar denge! PC band rakhein, website chalti rahegi! ✅
 
+Note: Render free tier mein server 15 min inactivity ke baad "sleep" ho jata hai — pehli request pe 30-50 sec lage sakta hai. Yeh normal hai free plan mein!

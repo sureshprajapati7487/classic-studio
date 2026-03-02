@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage, limits: { fileSize: 4 * 1024 * 1024 * 1024 } }); // 4GB — supports 4K videos
+const upload = multer({ storage, limits: { fileSize: 200 * 1024 * 1024 } }); // 200MB max
 
 // GET /api/portfolio — All active portfolio items (optionally by category)
 router.get('/', (req, res) => {
@@ -92,11 +92,22 @@ router.patch('/:id', verifyToken, (req, res) => {
     }
 });
 
-// DELETE /api/portfolio/:id — Admin: Remove portfolio item
+// DELETE /api/portfolio/:id — Admin: Remove portfolio item + delete file from disk
 router.delete('/:id', verifyToken, (req, res) => {
     try {
         const item = db.get('portfolio_items').find({ id: parseInt(req.params.id) }).value();
         if (!item) return res.status(404).json({ error: 'Item not found' });
+
+        // Delete actual file from disk (don't fail if file already gone)
+        if (item.file_path) {
+            const absPath = path.join(__dirname, '..', item.file_path);
+            fs.unlink(absPath, (err) => {
+                if (err && err.code !== 'ENOENT') {
+                    console.warn(`⚠️ Could not delete file: ${absPath} —`, err.message);
+                }
+            });
+        }
+
         db.get('portfolio_items').remove({ id: parseInt(req.params.id) }).write();
         res.json({ success: true });
     } catch (err) {

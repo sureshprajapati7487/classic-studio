@@ -2,15 +2,31 @@ const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const { db, nextId } = require('../db');
-const dotenv = require('dotenv');
-dotenv.config({ quiet: true });
 
-// POST /api/contact — Save message and send email
+// POST /api/contact — Save message and send email notification
 router.post('/', async (req, res) => {
     try {
-        const { name, email, mobile, message } = req.body;
+        const { name, email, mobile, message, website } = req.body;
+
+        // ── Honeypot: bots fill this hidden field, humans don't ──
+        if (website) {
+            // Silently succeed — don't reveal detection to the bot
+            return res.json({ success: true, message: 'Message received!' });
+        }
+
         if (!name || !email || !message) {
             return res.status(400).json({ error: 'Name, email, and message are required' });
+        }
+
+        // Stronger email validation (requires valid TLD)
+        const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!EMAIL_RE.test(email)) {
+            return res.status(400).json({ error: 'Please enter a valid email address' });
+        }
+
+        // Basic length guards
+        if (name.length > 100 || message.length > 2000) {
+            return res.status(400).json({ error: 'Input too long' });
         }
 
         const id = nextId('contact_messages');
@@ -22,25 +38,37 @@ router.post('/', async (req, res) => {
             created_at: new Date().toISOString()
         }).write();
 
-        // Send email notification if SMTP is configured
-        if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD !== 'your_gmail_app_password') {
+        // Read SMTP from DB settings first (admin panel), fallback to .env
+        const siteSettings = db.get('site_settings').value() || {};
+        const smtpEmail = siteSettings.smtp_email || process.env.SMTP_EMAIL || '';
+        const smtpPass = siteSettings.smtp_password || process.env.SMTP_PASSWORD || '';
+        const notifyEmail = siteSettings.notify_email || process.env.NOTIFY_EMAIL || smtpEmail;
+
+        const smtpConfigured = smtpEmail &&
+            smtpPass &&
+            smtpPass !== 'your_gmail_app_password';
+
+        if (smtpConfigured) {
             try {
                 const transporter = nodemailer.createTransport({
                     service: 'gmail',
-                    auth: { user: process.env.SMTP_EMAIL, pass: process.env.SMTP_PASSWORD }
+                    auth: { user: smtpEmail, pass: smtpPass }
                 });
                 await transporter.sendMail({
-                    from: `"${name}" <${process.env.SMTP_EMAIL}>`,
-                    to: process.env.NOTIFY_EMAIL,
+                    from: `"${name}" <${smtpEmail}>`,
+                    to: notifyEmail,
                     subject: `📩 New Contact Message from ${name}`,
-                    html: `<h2>New Contact Message</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Mobile:</strong> ${mobile || 'Not provided'}</p>
-            <p><strong>Message:</strong></p><p>${message}</p>`
+                    html: `
+                        <h2>New Contact Message</h2>
+                        <p><strong>Name:</strong> ${name}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Mobile:</strong> ${mobile || 'Not provided'}</p>
+                        <p><strong>Message:</strong></p>
+                        <p style="background:#f5f5f5;padding:12px;border-radius:6px;">${message}</p>
+                    `
                 });
             } catch (emailErr) {
-                console.warn('Email notification failed:', emailErr.message);
+                console.warn('⚠️ Contact email notification failed:', emailErr.message);
             }
         }
 
@@ -52,3 +80,4 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+

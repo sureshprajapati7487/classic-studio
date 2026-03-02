@@ -6,33 +6,46 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import './OrderForm.css';
 
-const PROJECT_TYPES = [
-    'Basic Edit (₹499)',
-    'Advanced Edit (₹999)',
-    'Pro Cinematic (₹1,999)',
-    'Wedding Edit',
-    'Reels / Shorts',
-    'YouTube Video Edit',
-    'Photo Retouching',
-    'Color Grading',
-    'Custom Project',
+// Static service types (not plan-based, no fixed price)
+const STATIC_SERVICE_TYPES = [
+    { label: 'Wedding Edit', price: 0 },
+    { label: 'Reels / Shorts', price: 0 },
+    { label: 'YouTube Video Edit', price: 0 },
+    { label: 'Photo Retouching', price: 0 },
+    { label: 'Color Grading', price: 0 },
+    { label: 'Custom Project', price: 0 },
 ];
-
-const PRICE_MAP = {
-    'Basic Edit (₹499)': 499,
-    'Advanced Edit (₹999)': 999,
-    'Pro Cinematic (₹1,999)': 1999,
-    'Wedding Edit': 999,
-    'Reels / Shorts': 499,
-    'YouTube Video Edit': 999,
-    'Photo Retouching': 499,
-    'Color Grading': 999,
-    'Custom Project': 0,
-};
 
 export default function OrderForm() {
     const { settings } = useSettings();
     const WHATSAPP_NUMBER = settings.whatsapp || '919876543210';
+
+    // Build dynamic PROJECT_TYPES and PRICE_MAP from settings.pricing_plans
+    const pricingPlans = (settings.pricing_plans && settings.pricing_plans.length > 0)
+        ? settings.pricing_plans
+        : [
+            { id: 'basic', name: 'Basic Edit', price: 499 },
+            { id: 'advanced', name: 'Advanced Edit', price: 999 },
+            { id: 'pro', name: 'Pro Cinematic', price: 1999 },
+        ];
+
+    // Build price map: "Plan Name (₹Price)" → price number
+    const PRICE_MAP = {};
+    const PLAN_TYPES = pricingPlans.map(plan => {
+        const label = `${plan.name} (₹${Number(plan.price).toLocaleString('en-IN')})`;
+        PRICE_MAP[label] = Number(plan.price);
+        return { label, price: plan.price };
+    });
+
+    // Static services default to 0 (custom quote)
+    STATIC_SERVICE_TYPES.forEach(s => { PRICE_MAP[s.label] = s.price; });
+
+    const PROJECT_TYPES = [
+        ...PLAN_TYPES.map(p => p.label),
+        ...STATIC_SERVICE_TYPES.map(s => s.label),
+    ];
+
+
     const [params] = useSearchParams();
     const navigate = useNavigate();
 
@@ -47,6 +60,7 @@ export default function OrderForm() {
 
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadInfo, setUploadInfo] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -79,6 +93,7 @@ export default function OrderForm() {
         }
         setFile(selectedFile);
         setUploading(true);
+        setUploadProgress(0);
         try {
             const fd = new FormData();
             fd.append('file', selectedFile);
@@ -86,13 +101,15 @@ export default function OrderForm() {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (e) => {
                     const pct = Math.round((e.loaded * 100) / e.total);
-                    // could show progress bar here
+                    setUploadProgress(pct);
                 }
             });
             setUploadInfo({ file_path: data.file_path, file_name: data.file_name });
+            setUploadProgress(100);
             toast.success('File uploaded successfully!');
         } catch {
             toast.error('File upload failed. You can still submit — share file link in instructions.');
+            setUploadProgress(0);
         } finally {
             setUploading(false);
         }
@@ -147,6 +164,21 @@ export default function OrderForm() {
                 prefill: { name: form.name, email: form.email, contact: form.mobile },
                 theme: { color: '#d4af37' },
                 handler: async (response) => {
+                    // ✅ Fix #10: Verify payment signature server-side before saving
+                    try {
+                        const verifyRes = await api.post('/api/payment/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+                        if (!verifyRes.data.success) {
+                            toast.error('Payment verification failed. Please contact us.');
+                            return;
+                        }
+                    } catch {
+                        toast.error('Could not verify payment. Please contact us via WhatsApp.');
+                        return;
+                    }
                     await saveOrder({
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_payment_id: response.razorpay_payment_id,
@@ -327,18 +359,27 @@ export default function OrderForm() {
                                 {file ? (
                                     <div className="file-drop__selected">
                                         <FiFile size={22} className="file-drop__file-icon" />
-                                        <div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
                                             <p className="file-drop__filename">{file.name}</p>
                                             <p className="file-drop__filesize">
                                                 {(file.size / (1024 * 1024)).toFixed(1)} MB
-                                                {uploading && ' — Uploading...'}
+                                                {uploading && ` — Uploading ${uploadProgress}%...`}
                                                 {!uploading && uploadInfo && ' — ✅ Uploaded'}
                                             </p>
+                                            {/* Progress bar */}
+                                            {uploading && (
+                                                <div className="file-upload-progress">
+                                                    <div
+                                                        className="file-upload-progress__bar"
+                                                        style={{ width: `${uploadProgress}%` }}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         <button
                                             type="button"
                                             className="file-drop__remove"
-                                            onClick={(e) => { e.stopPropagation(); setFile(null); setUploadInfo(null); }}
+                                            onClick={(e) => { e.stopPropagation(); setFile(null); setUploadInfo(null); setUploadProgress(0); }}
                                         >
                                             <FiX size={16} />
                                         </button>

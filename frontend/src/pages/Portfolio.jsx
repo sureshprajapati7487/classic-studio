@@ -289,6 +289,12 @@ export default function Portfolio() {
         ? items
         : items.filter(i => i.category === activeCategory);
 
+    // Trigger re-mount animation when category changes
+    const [gridKey, setGridKey] = useState('all');
+    useEffect(() => {
+        setGridKey(activeCategory + Date.now());
+    }, [activeCategory]);
+
     // Determine if 4K (file_size > 500MB OR original_name contains "4k/4K/2160")
     const is4k = (item) => {
         if (!item) return false;
@@ -342,12 +348,15 @@ export default function Portfolio() {
                             <p>Loading portfolio...</p>
                         </div>
                     ) : (
-                        <div className="portfolio-grid">
-                            {filtered.map((item) => (
+                        <div className="portfolio-grid" key={gridKey}>
+                            {filtered.map((item, idx) => (
                                 <div
                                     key={item.id}
                                     className={`portfolio-card ${hoveredId === item.id ? 'portfolio-card--hovered' : ''}`}
-                                    style={{ background: item.gradient || 'var(--bg-card)' }}
+                                    style={{
+                                        background: item.gradient || 'var(--bg-card)',
+                                        animationDelay: `${idx * 0.06}s`,
+                                    }}
                                     onMouseEnter={() => setHoveredId(item.id)}
                                     onMouseLeave={() => setHoveredId(null)}
                                     onClick={() => item.file_path && setSelectedItem(item)}

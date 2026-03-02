@@ -736,3 +736,22 @@
     }
 
 }
+
+/* ── Portfolio Card Stagger Filter Animation ──
+   gridKey change remounts the grid, each card fades+slides in
+   with animationDelay set via inline style in JSX ── */
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.portfolio-card {
+    animation: cardFadeIn 0.38s ease both;
+}

@@ -3,8 +3,7 @@ const router = express.Router();
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { db } = require('../db');
-const dotenv = require('dotenv');
-dotenv.config({ quiet: true });
+// Note: dotenv loaded by server.js at startup — no need to reload here
 
 // Get Razorpay instance dynamically — reads from DB settings first, then .env fallback
 function getRazorpay() {
@@ -15,12 +14,17 @@ function getRazorpay() {
     return new Razorpay({ key_id: keyId, key_secret: keySecret });
 }
 
-// GET /api/payment/config — Send config status to frontend
+// GET /api/payment/config — Send config status to frontend (public, safe)
+// key_id (like rzp_live_xxx) IS intentionally public in Razorpay — needed by JS SDK
+// BUT we only expose it when Razorpay is properly configured, never expose partial/test keys unnecessarily
 router.get('/config', (req, res) => {
     const s = db.get('site_settings').value() || {};
     const keyId = s.razorpay_key_id || process.env.RAZORPAY_KEY_ID || null;
-    const configured = !!(keyId && !keyId.includes('xxxxxxxxxxxx'));
-    res.json({ key_id: keyId, configured });
+    const keySecret = s.razorpay_key_secret || process.env.RAZORPAY_KEY_SECRET || '';
+    const configured = !!(keyId && !keyId.includes('xxxxxxxxxxxx') && keySecret && keySecret !== 'your_razorpay_secret_here');
+    // key_id is Razorpay's publishable key — safe to expose (like Stripe publishable key)
+    // key_secret is NEVER returned here; it stays server-side only
+    res.json({ configured, key_id: configured ? keyId : null });
 });
 
 // POST /api/payment/create-order — Create Razorpay order

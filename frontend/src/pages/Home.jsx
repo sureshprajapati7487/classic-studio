@@ -102,6 +102,8 @@ const TESTIMONIALS = [
 export default function Home() {
     const { settings } = useSettings();
     const WHATSAPP_NUMBER = settings.whatsapp || '919876543210';
+    const INSTAGRAM_URL = settings.instagram || 'https://instagram.com/yourprofile';
+    const YOUTUBE_URL = settings.youtube || '';
 
     return (
         <div className="home page-enter">
@@ -283,18 +285,26 @@ export default function Home() {
                                 </Link>
                             </div>
                         </div>
+                        {/* Dynamic pricing teaser from DB settings */}
                         <div className="pricing-teaser__cards">
-                            {[
-                                { name: 'Basic', price: '₹499', color: '#8888aa', featured: false },
-                                { name: 'Advanced', price: '₹999', color: '#d4af37', featured: true },
-                                { name: 'Pro', price: '₹1,999', color: '#e0e0e0', featured: false },
-                            ].map(({ name, price, color, featured }) => (
-                                <div key={name} className={`mini-price-card ${featured ? 'mini-price-card--featured' : ''}`}>
-                                    <span style={{ color, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{name}</span>
-                                    <strong style={{ color: featured ? '#d4af37' : 'var(--text-primary)', fontSize: '1.6rem', fontFamily: 'var(--font-heading)', display: 'block', marginTop: 8 }}>{price}</strong>
-                                    {featured && <span style={{ fontSize: '0.68rem', color: '#d4af37', fontFamily: 'var(--font-ui)', fontWeight: 700, letterSpacing: '0.08em' }}>POPULAR</span>}
-                                </div>
-                            ))}
+                            {((settings.pricing_plans && settings.pricing_plans.length > 0)
+                                ? settings.pricing_plans.slice(0, 3)
+                                : [
+                                    { id: 'basic', name: 'Basic', price: 499, popular: false },
+                                    { id: 'advanced', name: 'Advanced', price: 999, popular: true },
+                                    { id: 'pro', name: 'Pro', price: 1999, popular: false },
+                                ]
+                            ).map(({ id, name, price, popular, featured }) => {
+                                const isFeatured = popular || featured;
+                                const color = id === 'advanced' ? '#d4af37' : id === 'pro' ? '#e0e0e0' : '#8888aa';
+                                return (
+                                    <div key={id} className={`mini-price-card ${isFeatured ? 'mini-price-card--featured' : ''}`}>
+                                        <span style={{ color, fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{name}</span>
+                                        <strong style={{ color: isFeatured ? '#d4af37' : 'var(--text-primary)', fontSize: '1.6rem', fontFamily: 'var(--font-heading)', display: 'block', marginTop: 8 }}>₹{Number(price).toLocaleString('en-IN')}</strong>
+                                        {isFeatured && <span style={{ fontSize: '0.68rem', color: '#d4af37', fontFamily: 'var(--font-ui)', fontWeight: 700, letterSpacing: '0.08em' }}>POPULAR</span>}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -328,12 +338,16 @@ export default function Home() {
                                 </a>
                             </div>
                             <div className="cta-banner__social">
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                                    <FaInstagram size={18} />
-                                </a>
-                                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                                    <FaYoutube size={18} />
-                                </a>
+                                {INSTAGRAM_URL && INSTAGRAM_URL !== 'https://instagram.com/yourprofile' && (
+                                    <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                        <FaInstagram size={18} />
+                                    </a>
+                                )}
+                                {YOUTUBE_URL && (
+                                    <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                                        <FaYoutube size={18} />
+                                    </a>
+                                )}
                                 <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
                                     <FaWhatsapp size={18} />
                                 </a>

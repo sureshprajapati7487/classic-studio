@@ -16,6 +16,7 @@ const OrderForm = lazy(() => import('./pages/OrderForm'));
 const Contact = lazy(() => import('./pages/Contact'));
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Auth guard — redirects to login if no JWT token
 function ProtectedRoute({ children }) {
@@ -62,6 +63,7 @@ function AdminLayout() {
             <AdminDashboard />
           </ProtectedRoute>
         } />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
@@ -80,6 +82,7 @@ function SiteLayout() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/order" element={<OrderForm />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
