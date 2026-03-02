@@ -712,55 +712,122 @@
 }
 
 .admin-plan-card {
-    padding: 20px;
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    padding: 0;
+    overflow: visible;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    background: linear-gradient(180deg, #17171f 0%, #111119 100%) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-plan-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Gradient header band at top of card */
+.admin-plan-card::before {
+    content: '';
+    display: block;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.7), rgba(212, 175, 55, 0.3));
+    border-radius: 16px 16px 0 0;
 }
 
 .admin-plan-card--popular {
-    border-color: var(--border-glow) !important;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.35) !important;
+    box-shadow: 0 0 32px rgba(212, 175, 55, 0.12), 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.admin-plan-card--popular::before {
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+    height: 5px;
 }
 
 .admin-plan-card__badge {
     position: absolute;
-    top: -11px;
+    top: -13px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
     color: #000;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 3px 14px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 16px;
     border-radius: 999px;
     white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+    z-index: 2;
+}
+
+/* Header section inside card */
+.admin-plan-card>.admin-settings-grid:first-of-type {
+    padding: 22px 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 0 !important;
+}
+
+/* Content section */
+.admin-plan-card>label,
+.admin-plan-card>.admin-feature-row,
+.admin-plan-card>.admin-feature-add {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/* Plan name + price inputs look */
+.admin-plan-card .form-input {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.07);
+    font-size: 0.88rem;
+}
+
+.admin-plan-card .form-input:focus {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(212, 175, 55, 0.4);
+}
+
+/* Feature label */
+.admin-plan-card>label.form-label {
+    display: block;
+    padding: 16px 20px 8px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
 }
 
 /* Feature row (input + remove button) */
 .admin-feature-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 0 20px;
 }
 
 .admin-feature-row .form-input {
     flex: 1;
-    padding: 8px 12px;
-    font-size: 0.85rem;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+    border-radius: 8px;
 }
 
 .admin-feature-remove {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.18);
     border-radius: 6px;
     color: #ef4444;
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -770,15 +837,25 @@
 }
 
 .admin-feature-remove:hover {
-    background: rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
 .admin-feature-add {
-    font-size: 0.8rem !important;
-    padding: 6px 14px !important;
-    margin-top: 4px;
-    width: 100%;
+    font-size: 0.78rem !important;
+    padding: 7px 14px !important;
+    margin: 10px 20px 16px !important;
+    width: calc(100% - 40px) !important;
     justify-content: center;
+    border-style: dashed !important;
+    border-color: rgba(212, 175, 55, 0.2) !important;
+    color: var(--text-muted) !important;
+}
+
+.admin-feature-add:hover {
+    border-color: rgba(212, 175, 55, 0.45) !important;
+    color: var(--gold) !important;
+    background: rgba(212, 175, 55, 0.05) !important;
 }
 
 /* Save bar */
