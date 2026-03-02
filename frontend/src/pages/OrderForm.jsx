@@ -97,7 +97,7 @@ export default function OrderForm() {
         try {
             const fd = new FormData();
             fd.append('file', selectedFile);
-            const { data } = await api.post('/api/upload', fd, {
+            const { data } = await api.post('/upload', fd, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (e) => {
                     const pct = Math.round((e.loaded * 100) / e.total);
@@ -142,7 +142,7 @@ export default function OrderForm() {
     const handleRazorpay = async () => {
         try {
             // Check if Razorpay is configured
-            const configRes = await api.get('/api/payment/config');
+            const configRes = await api.get('/payment/config');
             if (!configRes.data.configured) {
                 // Razorpay not configured — save order as unpaid and notify
                 toast('Payment gateway not set up yet. Order saved — we will contact you for payment.', { icon: 'ℹ️' });
@@ -150,7 +150,7 @@ export default function OrderForm() {
                 return;
             }
             // Create Razorpay order
-            const { data } = await api.post('/api/payment/create-order', {
+            const { data } = await api.post('/payment/create-order', {
                 amount,
                 receipt: `order_${Date.now()}`
             });
@@ -166,7 +166,7 @@ export default function OrderForm() {
                 handler: async (response) => {
                     // ✅ Fix #10: Verify payment signature server-side before saving
                     try {
-                        const verifyRes = await api.post('/api/payment/verify', {
+                        const verifyRes = await api.post('/payment/verify', {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
@@ -196,7 +196,7 @@ export default function OrderForm() {
     const saveOrder = async (paymentData) => {
         setSubmitting(true);
         try {
-            await api.post('/api/orders', {
+            await api.post('/orders', {
                 ...form,
                 ...paymentData,
                 amount,

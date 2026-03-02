@@ -275,7 +275,7 @@ export default function Portfolio() {
     const [selectedItem, setSelectedItem] = useState(null);
 
     useEffect(() => {
-        api.get('/api/portfolio')
+        api.get('/portfolio')
             .then(({ data }) => setItems(data.items?.length > 0 ? data.items : PLACEHOLDER_ITEMS))
             .catch(() => setItems(PLACEHOLDER_ITEMS))
             .finally(() => setLoading(false));

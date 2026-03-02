@@ -32,7 +32,7 @@ export function SettingsProvider({ children }) {
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        api.get('/api/settings')
+        api.get('/settings')
             .then(({ data }) => {
                 if (data.settings) setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
             })

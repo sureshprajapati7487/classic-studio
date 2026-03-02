@@ -36,7 +36,7 @@ export default function AdminLogin() {
         }
         setLoading(true);
         try {
-            const { data } = await api.post('/api/admin/login', loginForm);
+            const { data } = await api.post('/admin/login', loginForm);
             localStorage.setItem('admin_token', data.token);
             localStorage.setItem('admin_email', data.admin.email);
             toast.success('Login successful! Welcome back 👋');
@@ -66,7 +66,7 @@ export default function AdminLogin() {
         }
         setLoading(true);
         try {
-            const { data } = await api.post('/api/admin/register', regForm);
+            const { data } = await api.post('/admin/register', regForm);
             localStorage.setItem('admin_token', data.token);
             localStorage.setItem('admin_email', data.admin.email);
             toast.success(data.message || 'Account created! Welcome 🎉');

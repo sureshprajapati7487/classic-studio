@@ -96,7 +96,7 @@ export default function Contact() {
 
         setLoading(true);
         try {
-            await api.post('/api/contact', form);
+            await api.post('/contact', form);
             setSent(true);
             toast.success('Message sent! We will get back to you soon. 💬');
         } catch {
