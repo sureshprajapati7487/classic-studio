@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fi';
 import { FaWhatsapp, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { useSettings } from '../context/SettingsContext';
+import api, { resolveMediaUrl } from '../api';
 import heroBg from '../assets/hero-bg.png';
 import './Home.css';
 
@@ -84,14 +85,6 @@ const SERVICES = [
     { emoji: '🎞️', title: 'Cinematic Edit', desc: 'Full cinematic productions with SFX, music sync, and dramatic storytelling.', color: '#60a5fa' },
 ];
 
-const SAMPLE_WORKS = [
-    { id: 1, title: 'Wedding Highlight', category: 'Wedding', gradient: 'linear-gradient(135deg,#3d0f0f,#1a0000)', icon: '💍' },
-    { id: 2, title: 'Instagram Reel', category: 'Reels', gradient: 'linear-gradient(135deg,#1a003d,#0a0020)', icon: '📱' },
-    { id: 3, title: 'YouTube Vlog', category: 'YouTube', gradient: 'linear-gradient(135deg,#003d0f,#001a00)', icon: '▶️' },
-    { id: 4, title: 'Portrait Retouch', category: 'Photo', gradient: 'linear-gradient(135deg,#3d003d,#1a0020)', icon: '📸' },
-    { id: 5, title: 'Cinematic Short', category: 'Cinematic', gradient: 'linear-gradient(135deg,#2a2a00,#1a1000)', icon: '🎬' },
-    { id: 6, title: 'Color Grade Demo', category: 'Color', gradient: 'linear-gradient(135deg,#003d3d,#001a2a)', icon: '🎨' },
-];
 
 const TESTIMONIALS = [
     { name: 'Rahul Sharma', role: 'Wedding Client', text: 'The highlight reel made our guests cry happy tears. Absolutely stunning work!', stars: 5 },
@@ -104,6 +97,13 @@ export default function Home() {
     const WHATSAPP_NUMBER = settings.whatsapp || '919876543210';
     const INSTAGRAM_URL = settings.instagram || 'https://instagram.com/yourprofile';
     const YOUTUBE_URL = settings.youtube || '';
+    const [sampleWorks, setSampleWorks] = useState([]);
+
+    useEffect(() => {
+        api.get('/portfolio')
+            .then(({ data }) => setSampleWorks((data.items || []).slice(0, 6)))
+            .catch(() => setSampleWorks([]));
+    }, []);
 
     return (
         <div className="home page-enter">
@@ -165,60 +165,79 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ══════ SAMPLE WORKS ══════ */}
-            <section className="section home-works">
-                <div className="container">
-                    <div className="text-center" style={{ marginBottom: 60 }}>
-                        <span className="section-label">Latest Work</span>
-                        <h2 className="section-title">Sample <span className="gold-text">Portfolio</span></h2>
-                        <div className="gold-divider center" />
-                        <p className="section-desc" style={{ margin: '0 auto' }}>
-                            A glimpse of our recent projects — every frame crafted with care.
-                        </p>
-                    </div>
+            {/* ══════ PORTFOLIO PREVIEW ══════ */}
+            {sampleWorks.length > 0 && (
+                <section className="section home-works">
+                    <div className="container">
+                        <div className="text-center" style={{ marginBottom: 60 }}>
+                            <span className="section-label">Latest Work</span>
+                            <h2 className="section-title">Our <span className="gold-text">Portfolio</span></h2>
+                            <div className="gold-divider center" />
+                            <p className="section-desc" style={{ margin: '0 auto' }}>
+                                A glimpse of our recent projects — every frame crafted with care.
+                            </p>
+                        </div>
 
-                    <div className="works-grid stagger">
-                        {SAMPLE_WORKS.map((work) => (
-                            <Link to="/portfolio" key={work.id} className="work-card" style={{ background: work.gradient }}>
-                                {/* Cinema gradient — always visible */}
-                                <div className="work-card__gradient" />
+                        <div className="works-grid stagger">
+                            {sampleWorks.map((work) => (
+                                <Link to="/portfolio" key={work.id} className="work-card"
+                                    style={{ background: work.gradient || 'var(--bg-card)' }}>
+                                    {/* Thumbnail for image/video */}
+                                    {work.file_path && work.file_type === 'image' && (
+                                        <img
+                                            src={resolveMediaUrl(work.file_path)}
+                                            alt={work.title}
+                                            className="work-card__thumb"
+                                        />
+                                    )}
+                                    {work.file_path && work.file_type === 'video' && (
+                                        <video
+                                            src={resolveMediaUrl(work.file_path)}
+                                            className="work-card__thumb"
+                                            muted preload="none"
+                                        />
+                                    )}
 
-                                {/* Top badge */}
-                                <div className="work-card__badges">
-                                    <span className="work-card__type-badge">
-                                        {work.icon} {work.category}
-                                    </span>
-                                </div>
+                                    {/* Cinema gradient overlay */}
+                                    <div className="work-card__gradient" />
 
-                                {/* Center play ring */}
-                                <div className="work-card__center">
-                                    <div className="work-card__play-ring">
-                                        <FiPlay size={20} style={{ marginLeft: 3 }} />
-                                    </div>
-                                </div>
-
-                                {/* Bottom footer — always visible, hover expands */}
-                                <div className="work-card__foot">
-                                    <div className="work-card__foot-top">
-                                        <h3 className="work-card__title">{work.title}</h3>
-                                    </div>
-                                    <div className="work-card__foot-reveal">
-                                        <span className="work-card__cta">
-                                            <FiArrowRight size={13} /> View Work
+                                    {/* Top badge */}
+                                    <div className="work-card__badges">
+                                        <span className="work-card__type-badge">
+                                            {work.file_type === 'video' ? '🎬' : '📸'} {work.category || 'Portfolio'}
                                         </span>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
 
-                    <div className="text-center mt-32">
-                        <Link to="/portfolio" className="btn btn-outline">
-                            View Full Portfolio <FiArrowRight size={15} />
-                        </Link>
+                                    {/* Center play ring */}
+                                    <div className="work-card__center">
+                                        <div className="work-card__play-ring">
+                                            <FiPlay size={20} style={{ marginLeft: 3 }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom footer */}
+                                    <div className="work-card__foot">
+                                        <div className="work-card__foot-top">
+                                            <h3 className="work-card__title">{work.title}</h3>
+                                        </div>
+                                        <div className="work-card__foot-reveal">
+                                            <span className="work-card__cta">
+                                                <FiArrowRight size={13} /> View Work
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        <div className="text-center mt-32">
+                            <Link to="/portfolio" className="btn btn-outline">
+                                View Full Portfolio <FiArrowRight size={15} />
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* ══════ SERVICES ══════ */}
             <section className="section home-services">

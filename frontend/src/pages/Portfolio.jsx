@@ -17,16 +17,6 @@ const CATEGORIES = [
     { id: 'cinematic', label: '🎞️ Cinematic Edit' },
 ];
 
-const PLACEHOLDER_ITEMS = [
-    { id: 1, category: 'wedding', title: 'Royal Wedding Highlight', file_type: 'video', gradient: 'linear-gradient(135deg,#1a0a00,#4d2600)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 2, category: 'wedding', title: 'Intimate Beach Wedding', file_type: 'video', gradient: 'linear-gradient(135deg,#001020,#003060)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 3, category: 'reels', title: 'Travel Reel — Goa', file_type: 'video', gradient: 'linear-gradient(135deg,#0a1a00,#204d00)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 4, category: 'reels', title: 'Product Launch Reel', file_type: 'video', gradient: 'linear-gradient(135deg,#1a000a,#4d0026)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 5, category: 'youtube', title: 'Tech Review Edit', file_type: 'video', gradient: 'linear-gradient(135deg,#001a1a,#004d4d)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 6, category: 'photo', title: 'Bridal Portrait Retouch', file_type: 'image', gradient: 'linear-gradient(135deg,#1a001a,#4d004d)', price: null, file_path: 'https://via.placeholder.com/1280x720.png?text=Photo+Retouch' },
-    { id: 7, category: 'color', title: 'Orange & Teal Grade', file_type: 'video', gradient: 'linear-gradient(135deg,#1a0800,#ff4d00)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-    { id: 8, category: 'cinematic', title: 'Short Film — Monsoon', file_type: 'video', gradient: 'linear-gradient(135deg,#000a1a,#00264d)', price: null, file_path: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-];
 
 // Utility: format seconds to mm:ss
 function fmtTime(s) {
@@ -276,8 +266,8 @@ export default function Portfolio() {
 
     useEffect(() => {
         api.get('/portfolio')
-            .then(({ data }) => setItems(data.items?.length > 0 ? data.items : PLACEHOLDER_ITEMS))
-            .catch(() => setItems(PLACEHOLDER_ITEMS))
+            .then(({ data }) => setItems(data.items || []))
+            .catch(() => setItems([]))
             .finally(() => setLoading(false));
     }, []);
 
@@ -354,6 +344,19 @@ export default function Portfolio() {
                         <div className="portfolio-loading">
                             <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
                             <p>Loading portfolio...</p>
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="portfolio-empty">
+                            <div className="portfolio-empty__icon">🎬</div>
+                            <h3 className="portfolio-empty__title">Portfolio Coming Soon</h3>
+                            <p className="portfolio-empty__desc">
+                                {activeCategory !== 'all'
+                                    ? 'No works in this category yet. Check other categories or come back soon!'
+                                    : 'Our portfolio is being updated with fresh cinematic work. Stay tuned!'}
+                            </p>
+                            <Link to="/order" className="btn btn-primary" style={{ marginTop: 8 }}>
+                                Place Your Order Now
+                            </Link>
                         </div>
                     ) : (
                         <div className="portfolio-grid" key={gridKey}>

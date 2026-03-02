@@ -420,6 +420,40 @@
     font-family: var(--font-ui);
 }
 
+/* ===== EMPTY STATE ===== */
+.portfolio-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.portfolio-empty__icon {
+    font-size: 4rem;
+    line-height: 1;
+    opacity: 0.5;
+}
+
+.portfolio-empty__title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.portfolio-empty__desc {
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    max-width: 380px;
+    line-height: 1.6;
+    margin: 0;
+}
+
 /* ===== LIGHTBOX / VIDEO MODAL (plb = portfolio lightbox) ===== */
 .plb-overlay {
     position: fixed;
